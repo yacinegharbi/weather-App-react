@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const API_KEY = "7cc23a3166283782842c2d16aafdb40e";
 
@@ -16,6 +16,37 @@ function Weather() {
         if (condition.includes("rain") || condition.includes("drizzle")) return "rainy-theme";
         return "default-theme";
     };
+    const fetchWeatherByCoords = async (latitude, longitude) => {
+        try {
+            setLoading(true);
+            const response = await fetch(
+                `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
+            );
+            if (!response.ok) throw new Error("City not found");
+            const data = await response.json();
+            setResult(data);
+        } catch (error) {
+            setErro(true);
+            setResult(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    fetchWeatherByCoords(latitude, longitude);
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                }
+            );
+        } else {
+            console.log("Geolocation is not supported by this browser.");
+        }
+    }, []);
 
     const handlersearch = async (e) => {
         e.preventDefault();
